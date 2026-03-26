@@ -1,0 +1,7 @@
+{
+  "name": "ai-pantry-chef",
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run dev"
+  }
+}
