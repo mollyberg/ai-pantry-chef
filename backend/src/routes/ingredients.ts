@@ -1,13 +1,11 @@
 import { Hono } from 'hono';
+import {
+  getIngredients,
+  createIngredients,
+} from '../controllers/ingredients.js';
 
 const ingredients = new Hono();
-
-ingredients.get('/', (c) => {
-  return c.json({ message: 'GET ingredients — coming soon' });
-});
-
-ingredients.post('/', (c) => {
-  return c.json({ message: 'POST ingredients — coming soon' });
-});
+ingredients.get('/:userId', getIngredients);
+ingredients.post('/', createIngredients);
 
 export default ingredients;
