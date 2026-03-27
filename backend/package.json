@@ -14,7 +14,9 @@
   "description": "",
   "dependencies": {
     "@hono/node-server": "^1.19.11",
-    "hono": "^4.12.9"
+    "@prisma/client": "^7.6.0",
+    "hono": "^4.12.9",
+    "prisma": "^7.6.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
