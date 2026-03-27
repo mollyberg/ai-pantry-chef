@@ -1,13 +1,12 @@
 import { Hono } from 'hono';
+import {
+  getMealPlan,
+  createMealPlan,
+} from '../controllers/mealplan.js';
 
-const mealplan = new Hono();
+const mealPlan = new Hono();
 
-mealplan.get('/', (c) => {
-  return c.json({ message: 'GET mealplan — coming soon' });
-});
+mealPlan.get('/:userId', getMealPlan);
+mealPlan.post('/', createMealPlan);
 
-mealplan.post('/', (c) => {
-  return c.json({ message: 'POST mealplan — coming soon' });
-});
-
-export default mealplan;
+export default mealPlan;
