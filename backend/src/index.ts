@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import ingredients from './routes/ingredients.js';
 import mealplan from './routes/mealplan.js';
 import user from './routes/user.js';
+import anthropic from './lib/anthropic.js';
 
 const app = new Hono();
 
@@ -14,6 +15,17 @@ app.get('/health', (c) => {
 app.route('/ingredients', ingredients);
 app.route('/user', user);
 app.route('/mealplan', mealplan);
+
+app.get('/test-ai', async (c) => {
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 100,
+    messages: [
+      { role: 'user', content: 'Say "AI Pantry Chef is working!" and nothing else.' }
+    ],
+  });
+  return c.json({ response: message.content[0] });
+});
 
 serve({
   fetch: app.fetch,
