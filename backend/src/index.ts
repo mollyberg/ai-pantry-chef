@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import ingredients from './routes/ingredients.js';
 import mealplan from './routes/mealplan.js';
 import user from './routes/user.js';
+import ai from './routes/ai.js';
 import anthropic from './lib/anthropic.js';
 
 const app = new Hono();
@@ -15,6 +16,8 @@ app.get('/health', (c) => {
 app.route('/ingredients', ingredients);
 app.route('/user', user);
 app.route('/mealplan', mealplan);
+app.route('/ai', ai);
+
 
 app.get('/test-ai', async (c) => {
   const message = await anthropic.messages.create({
