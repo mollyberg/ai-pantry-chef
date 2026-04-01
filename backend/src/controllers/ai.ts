@@ -1,5 +1,25 @@
 import type { Context } from 'hono';
 import anthropic from '../lib/anthropic.js';
+import { parseAiResponse } from '../lib/parseAiResponse.js';
+import Anthropic from '@anthropic-ai/sdk';
+
+const callClaude = async (
+  messages: Anthropic.MessageParam[],
+  maxTokens = 1024
+) => {
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: maxTokens,
+    messages,
+  });
+
+  const content = response.content[0];
+  if (content == null || content.type !== 'text') {
+    throw new Error('Unexpected response from AI');
+  }
+
+  return parseAiResponse(content.text);
+};
 
 export const detectIngredients = async (c: Context) => {
   try {
@@ -10,24 +30,46 @@ export const detectIngredients = async (c: Context) => {
       return c.json({ error: 'Missing image or mediaType' }, 400);
     }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [
+    //verify image type is valid
+    const validMediaTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (!validMediaTypes.includes(mediaType)) {
+      return c.json(
         {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: image,
-              },
+          error: 'Invalid image type. Please upload a JPEG, PNG, GIF, or WEBP.',
+        },
+        400
+      );
+    }
+
+    // base64 string length / 1.37 ≈ original file size in bytes
+    const approximateSizeInMB = image.length / 1.37 / (1024 * 1024);
+    if (approximateSizeInMB > 5) {
+      return c.json(
+        { error: 'Image too large. Please upload an image under 5MB.' },
+        400
+      );
+    }
+
+    const claudeInput: Anthropic.MessageParam[] = [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: image,
             },
-            {
-              type: 'text',
-              text: `You are a helpful kitchen assistant. Analyze this image of a fridge or pantry and identify all visible food ingredients.
+          },
+          {
+            type: 'text',
+            text: `You are a helpful kitchen assistant. Analyze this image of a fridge or pantry and identify all visible food ingredients.
 
 Return ONLY a valid JSON object in this exact format, with no other text:
 {
@@ -39,22 +81,19 @@ Rules:
 - Use simple, common names (e.g. "eggs" not "large grade A eggs")
 - If this is not a fridge or pantry image, return { "ingredients": [] }
 - Do not include packaging, containers, or non-food items`,
-            },
-          ],
-        },
-      ],
-    });
+          },
+        ],
+      },
+    ];
 
-    const content = response.content[0];
-    if (content == null || content.type !== 'text') {
-      return c.json({ error: 'Unexpected response from AI' }, 500);
-    }
-
-    const parsed = JSON.parse(content.text);
-    return c.json(parsed);
+    const content = await callClaude(claudeInput);
+    return c.json(content);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('timeout')) {
+      return c.json({ error: 'Request timed out, please try again' }, 504);
+    }
     console.error('Full error:', error);
-    return c.json({ error: 'Failed to detect ingredients' }, 500);
+    return c.json({ error: 'Failed to generate mealplan' }, 500);
   }
 };
 
@@ -67,16 +106,13 @@ export const generateMealplan = async (c: Context) => {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `You are a helpful kitchen assistant. Here are the available ingredients:
+    const claudeInput: Anthropic.MessageParam[] = [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `You are a helpful kitchen assistant. Here are the available ingredients:
             ${ingredients.join(', ')}
               
               Take this list of ingredients and generate a 7 day meal plan including meals for breakfast, lunch, and dinner.
@@ -102,27 +138,17 @@ Rules:
 - Meals should be well rounded even if it requires purchasing additional ingredients. Prioritize using existing ingredients when possible, 
 but add ingredients when they are needed to make a more well-rounded meal or when a few purchases can make a big impact. 
 If existing ingredient list is limited, try to pick missing ingredients that can be used in multiple recipes.`,
-            },
-          ],
-        },
-      ],
-    });
+          },
+        ],
+      },
+    ];
 
-    const content = response.content[0];
-    if (content == null || content.type !== 'text') {
-      return c.json({ error: 'Unexpected response from AI' }, 500);
-    }
-
-    //This strips ` ```json ` or ` ``` ` from the start and end of the response before parsing, so it works regardless of whether Claude wraps it or not.
-    const cleaned = content.text
-      .replace(/^```json\n?/, '')
-      .replace(/^```\n?/, '')
-      .replace(/\n?```$/, '')
-      .trim();
-
-    const parsed = JSON.parse(cleaned);
-    return c.json(parsed);
+    const content = await callClaude(claudeInput, 4096);
+    return c.json(content);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('timeout')) {
+      return c.json({ error: 'Request timed out, please try again' }, 504);
+    }
     console.error('Full error:', error);
     return c.json({ error: 'Failed to generate mealplan' }, 500);
   }
