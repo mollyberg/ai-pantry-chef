@@ -44,3 +44,6 @@ export type SavedMealPlan = {
 export type DetectedIngredients = {
   ingredients: string[];
 };
+
+//states a file upload can be in
+export type UploadStep = 'upload' | 'detecting' | 'ingredients' | 'complete';
