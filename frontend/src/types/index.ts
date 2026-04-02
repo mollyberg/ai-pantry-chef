@@ -46,4 +46,4 @@ export type DetectedIngredients = {
 };
 
 //states a file upload can be in
-export type UploadStep = 'upload' | 'detecting' | 'ingredients' | 'complete';
+export type UploadStep = 'upload' | 'detecting' | 'ingredients' | 'generating' | 'mealplan' | 'complete';

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { UploadStep } from '../types/index.js';
-import { detectIngredients } from '../api/index.js';
+import type { GeneratedMealPlan } from '../types/index.js';
+import { detectIngredients, generateMealPlan } from '../api/index.js';
 
 const convertToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -21,6 +22,7 @@ const UploadPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [newIngredient, setNewIngredient] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [mealPlan, setMealPlan] = useState<GeneratedMealPlan | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,8 +70,27 @@ const UploadPage = () => {
   };
 
   const handleGenerateMealPlan = async () => {
-    // we'll build this in Session 3
-    console.log('Generating meal plan with:', ingredients);
+    setError(null);
+    setStep('generating');
+
+    try {
+      // hardcoding userId for now — Phase 5 will get this from Clerk auth
+      const userId = 'cmn9jejm80000iw4jgjt3jklb';
+      const result = await generateMealPlan(userId, ingredients);
+      setMealPlan(result);
+      setStep('mealplan');
+    } catch (err) {
+      console.error('Meal plan error:', err);
+      setError(
+        'Something went wrong generating your meal plan. Please try again.'
+      );
+      setStep('ingredients');
+    }
+  };
+
+  const handleSaveMealPlan = async () => {
+    // Session 4 will implement this
+    console.log('Saving meal plan...');
   };
 
   return (
@@ -129,6 +150,65 @@ const UploadPage = () => {
           >
             Generate Meal Plan
           </button>
+        </div>
+      )}
+
+      {step === 'generating' && (
+        <div>
+          <h1>Building your meal plan...</h1>
+          <p>
+            Claude is creating a personalized 7-day meal plan from your
+            ingredients. This can take a few minutes. Please do not exit this
+            screen.
+          </p>
+        </div>
+      )}
+
+      {step === 'mealplan' && mealPlan && (
+        <div>
+          <h1>Your 7-Day Meal Plan</h1>
+
+          {Object.entries(mealPlan.mealPlan).map(([day, meals]) => (
+            <div key={day}>
+              <h2>{day.charAt(0).toUpperCase() + day.slice(1)}</h2>
+
+              {Object.entries(meals).map(([mealType, meal]) => (
+                <div key={mealType}>
+                  <h3>
+                    {mealType.charAt(0).toUpperCase() + mealType.slice(1)}:{' '}
+                    {meal.title}
+                  </h3>
+                  <p>
+                    <strong>Ingredients:</strong> {meal.ingredients.join(', ')}
+                  </p>
+                  <p>
+                    <strong>Recipe:</strong> {meal.recipe}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {Object.keys(mealPlan.missingIngredients).length > 0 && (
+            <div>
+              <h2>Shopping List</h2>
+              <p>You'll need to buy these ingredients:</p>
+              <ul>
+                {Object.entries(mealPlan.missingIngredients).map(
+                  ([recipe, missing]) =>
+                    missing.length > 0 && (
+                      <li key={recipe}>
+                        <strong>{recipe}:</strong> {missing.join(', ')}
+                      </li>
+                    )
+                )}
+              </ul>
+            </div>
+          )}
+
+          <button onClick={handleSaveMealPlan}>Save Meal Plan</button>
+
+          <button onClick={() => setStep('upload')}>Start Over</button>
         </div>
       )}
 
