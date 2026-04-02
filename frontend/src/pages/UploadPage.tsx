@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import type { UploadStep } from '../types/index.js';
 import type { GeneratedMealPlan } from '../types/index.js';
-import { detectIngredients, generateMealPlan } from '../api/index.js';
+import {
+  detectIngredients,
+  generateMealPlan,
+  saveMealPlan,
+} from '../api/index.js';
+import { useNavigate } from 'react-router-dom';
 
 const convertToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -23,6 +28,7 @@ const UploadPage = () => {
   const [newIngredient, setNewIngredient] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [mealPlan, setMealPlan] = useState<GeneratedMealPlan | null>(null);
+  const navigate = useNavigate();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -89,8 +95,26 @@ const UploadPage = () => {
   };
 
   const handleSaveMealPlan = async () => {
-    // Session 4 will implement this
-    console.log('Saving meal plan...');
+    if (!mealPlan) return;
+    setError(null);
+    setIsGenerating(true);
+
+    try {
+      // hardcoded userId for now — Phase 5 replaces with Clerk
+      const userId = 'cmn9jejm80000iw4jgjt3jklb';
+      await saveMealPlan(
+        userId,
+        mealPlan.mealPlan,
+        ingredients,
+        mealPlan.missingIngredients
+      );
+      navigate('/mealplan');
+    } catch (err) {
+      console.error('Save error:', err);
+      setError('Something went wrong saving your meal plan. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -206,7 +230,9 @@ const UploadPage = () => {
             </div>
           )}
 
-          <button onClick={handleSaveMealPlan}>Save Meal Plan</button>
+          <button onClick={handleSaveMealPlan} disabled={isGenerating}>
+            {isGenerating ? 'Saving...' : 'Save Meal Plan'}
+          </button>
 
           <button onClick={() => setStep('upload')}>Start Over</button>
         </div>
