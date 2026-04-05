@@ -6,12 +6,11 @@ import MealPlanPage from './pages/MealPlanPage';
 import HistoryPage from './pages/HistoryPage';
 import MealPlanDetailPage from './pages/MealPlanDetailPage';
 
-
 const App = () => {
   return (
     <BrowserRouter>
       <Navbar />
-      <main>
+      <main className="max-w-4xl mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/upload" element={<UploadPage />} />

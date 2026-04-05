@@ -12,7 +12,6 @@ const MealPlanPage = () => {
   useEffect(() => {
     const fetchLatestPlan = async () => {
       try {
-        // hardcoded userId for now — Phase 5 replaces with Clerk
         const userId = 'cmn9jejm80000iw4jgjt3jklb';
         const plans = await getMealPlans(userId);
 
@@ -21,10 +20,8 @@ const MealPlanPage = () => {
           return;
         }
 
-        // get the most recently saved plan
-        const sorted = plans.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        const sorted = plans.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setMealPlan(sorted[0]);
       } catch (err) {
@@ -37,38 +34,83 @@ const MealPlanPage = () => {
     fetchLatestPlan();
   }, []);
 
-  if (loading) return <p>Loading your meal plan...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (loading) return (
+    <div className="flex justify-center py-24">
+      <p className="text-gray-500">Loading your meal plan...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+      <p className="text-sm text-red-600">{error}</p>
+    </div>
+  );
+
   if (!mealPlan) return null;
 
   return (
-    <div>
-      <h1>Your Saved Meal Plan</h1>
-      <p>Saved on {new Date(mealPlan.createdAt).toLocaleDateString()}</p>
-
-      {Object.entries(mealPlan.plan).map(([day, meals]) => (
-        <div key={day}>
-          <h2>{day.charAt(0).toUpperCase() + day.slice(1)}</h2>
-          {Object.entries(meals).map(([mealType, meal]) => (
-            <div key={mealType}>
-              <h3>
-                {mealType.charAt(0).toUpperCase() + mealType.slice(1)}:{' '}
-                {meal.title}
-              </h3>
-              <p>
-                <strong>Ingredients:</strong> {meal.ingredients.join(', ')}
-              </p>
-              <p>
-                <strong>Recipe:</strong> {meal.recipe}
-              </p>
-            </div>
-          ))}
+    <div className="flex flex-col gap-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Your Saved Meal Plan</h1>
+          <p className="text-gray-500 mt-1">
+            Saved on {new Date(mealPlan.createdAt).toLocaleDateString('en-US', {
+              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            })}
+          </p>
         </div>
-      ))}
+        <button
+          onClick={() => navigate('/history')}
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          View all plans →
+        </button>
+      </div>
 
-      <button onClick={() => navigate('/upload')}>Create New Meal Plan</button>
+      <div className="grid gap-4">
+        {Object.entries(mealPlan.plan).map(([day, meals]) => (
+          <div key={day} className="border border-gray-200 rounded-xl p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              {day.charAt(0).toUpperCase() + day.slice(1)}
+            </h2>
+            <div className="grid gap-3">
+              {Object.entries(meals).map(([mealType, meal]) => (
+                <div key={mealType} className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                    {mealType}
+                  </p>
+                  <p className="font-medium text-gray-900">{meal.title}</p>
+                  <p className="text-sm text-gray-500 mt-1">{meal.ingredients.join(', ')}</p>
+                  <p className="text-sm text-gray-600 mt-2">{meal.recipe}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      <button onClick={() => navigate('/history')}>View All Plans</button>
+      {Object.keys(mealPlan.missingIngredients).length > 0 && (
+        <div className="border border-amber-200 bg-amber-50 rounded-xl p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">🛒 Shopping List</h2>
+          <div className="grid gap-2">
+            {Object.entries(mealPlan.missingIngredients).map(([recipe, missing]) =>
+              missing.length > 0 && (
+                <div key={recipe} className="text-sm">
+                  <span className="font-medium text-gray-700">{recipe}:</span>{' '}
+                  <span className="text-gray-600">{missing.join(', ')}</span>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => navigate('/upload')}
+        className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+      >
+        Create New Meal Plan
+      </button>
     </div>
   );
 };
