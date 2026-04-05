@@ -6,12 +6,20 @@ import mealplan from './routes/mealplan.js';
 import user from './routes/user.js';
 import ai from './routes/ai.js';
 import anthropic from './lib/anthropic.js';
+import { cors } from 'hono/cors';
 
 const app = new Hono();
 
 app.get('/health', (c) => {
   return c.json({ status: 'ok' });
 });
+
+//allow traffic from local frontend
+app.use('*', cors({
+  origin: ['http://localhost:5173'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.route('/ingredients', ingredients);
 app.route('/user', user);
