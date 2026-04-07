@@ -1,13 +1,11 @@
 import type { Context } from 'hono';
+import { getAuth } from '@hono/clerk-auth';
 import prisma from '../lib/prisma.js';
 
 export const getUser = async (c: Context) => {
   try {
-    const userId = c.req.param('id');
-
-    if (!userId) {
-      return c.json({ error: 'Missing user id' }, 400);
-    }
+    const { userId } = getAuth(c);
+    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
 
     const logs = await prisma.user.findUnique({
       where: { id: userId }

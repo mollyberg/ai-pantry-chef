@@ -6,7 +6,7 @@ import {
 
 const mealPlan = new Hono();
 
-mealPlan.get('/:userId', getMealPlan);
+mealPlan.get('/', getMealPlan);
 mealPlan.post('/', createMealPlan);
 
 export default mealPlan;

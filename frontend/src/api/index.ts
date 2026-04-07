@@ -1,10 +1,18 @@
 import axios from 'axios';
 import type { DetectedIngredients, GeneratedMealPlan, SavedMealPlan } from '../types/index.js';
 
-// create one axios instance — all calls go through this
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
 });
+
+// add Clerk token to every request automatically
+export const setAuthToken = (token: string | null) => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
 
 // detect ingredients from a photo
 export const detectIngredients = async (
@@ -17,22 +25,19 @@ export const detectIngredients = async (
 
 // generate a meal plan from ingredients
 export const generateMealPlan = async (
-  userId: string,
   ingredients: string[]
 ): Promise<GeneratedMealPlan> => {
-  const response = await api.post('/ai/generate-mealplan', { userId, ingredients });
+  const response = await api.post('/ai/generate-mealplan', { ingredients });
   return response.data;
 };
 
 // save a meal plan to the database
 export const saveMealPlan = async (
-  userId: string,
   plan: GeneratedMealPlan['mealPlan'],
   ingredientsUsed: string[],
   missingIngredients: Record<string, string[]>
 ): Promise<SavedMealPlan> => {
   const response = await api.post('/mealplan', {
-    userId,
     plan,
     ingredientsUsed,
     missingIngredients,
@@ -41,8 +46,8 @@ export const saveMealPlan = async (
 };
 
 // get all saved meal plans for a user
-export const getMealPlans = async (userId: string): Promise<SavedMealPlan[]> => {
-  const response = await api.get(`/mealplan/${userId}`);
+export const getMealPlans = async (): Promise<SavedMealPlan[]> => {
+  const response = await api.get(`/mealplan`);
   return response.data;
 };
 

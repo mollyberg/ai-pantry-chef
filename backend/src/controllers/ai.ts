@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 import anthropic from '../lib/anthropic.js';
 import { parseAiResponse } from '../lib/parseAiResponse.js';
+import { getAuth } from '@hono/clerk-auth';
 import Anthropic from '@anthropic-ai/sdk';
 
 const callClaude = async (
@@ -23,6 +24,9 @@ const callClaude = async (
 
 export const detectIngredients = async (c: Context) => {
   try {
+    const { userId } = getAuth(c);
+    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
+
     const body = await c.req.json();
     const { image, mediaType } = body;
 
@@ -99,10 +103,12 @@ Rules:
 
 export const generateMealplan = async (c: Context) => {
   try {
+    const { userId } = getAuth(c);
+    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
     const body = await c.req.json();
-    const { ingredients, userId } = body;
+    const { ingredients } = body;
 
-    if (!ingredients || !userId) {
+    if (!ingredients) {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 

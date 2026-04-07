@@ -1,9 +1,10 @@
 import type { Context } from 'hono';
+import { getAuth } from '@hono/clerk-auth';
 import prisma from '../lib/prisma.js';
 
 export const getMealPlan = async (c: Context) => {
   try {
-    const userId = c.req.param('userId');
+    const { userId } = getAuth(c);
 
     if (!userId) {
       return c.json({ error: 'Missing user id' }, 400);
@@ -23,10 +24,23 @@ export const getMealPlan = async (c: Context) => {
 
 export const createMealPlan = async (c: Context) => {
   try {
-    const body = await c.req.json();
-    const { userId, ingredientsUsed, missingIngredients, plan } = body;
+    console.log('made it 1');
+    
+    const { userId } = getAuth(c);
 
-    if (!userId || !ingredientsUsed || !missingIngredients || !plan) {
+    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
+
+    console.log('made it 2');
+
+    const body = await c.req.json();
+    console.log('made it 3');
+
+    console.log('createMealPlan body:', JSON.stringify(body, null, 2));
+    console.log('userId:', userId);
+
+    const { ingredientsUsed, missingIngredients, plan } = body;
+
+    if (!ingredientsUsed || !missingIngredients || !plan) {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 

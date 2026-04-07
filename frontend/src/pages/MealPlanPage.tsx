@@ -12,8 +12,7 @@ const MealPlanPage = () => {
   useEffect(() => {
     const fetchLatestPlan = async () => {
       try {
-        const userId = 'cmn9jejm80000iw4jgjt3jklb';
-        const plans = await getMealPlans(userId);
+        const plans = await getMealPlans();
 
         if (plans.length === 0) {
           navigate('/upload');

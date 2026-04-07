@@ -80,9 +80,7 @@ const UploadPage = () => {
     setStep('generating');
 
     try {
-      // hardcoding userId for now — Phase 5 will get this from Clerk auth
-      const userId = 'cmn9jejm80000iw4jgjt3jklb';
-      const result = await generateMealPlan(userId, ingredients);
+      const result = await generateMealPlan(ingredients);
       setMealPlan(result);
       setStep('mealplan');
     } catch (err) {
@@ -100,10 +98,7 @@ const UploadPage = () => {
     setIsGenerating(true);
 
     try {
-      // hardcoded userId for now — Phase 5 replaces with Clerk
-      const userId = 'cmn9jejm80000iw4jgjt3jklb';
       await saveMealPlan(
-        userId,
         mealPlan.mealPlan,
         ingredients,
         mealPlan.missingIngredients

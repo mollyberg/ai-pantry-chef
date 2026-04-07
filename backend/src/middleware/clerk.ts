@@ -1,0 +1,1 @@
+export { clerkMiddleware, getAuth } from '@hono/clerk-auth';

@@ -16,8 +16,7 @@ const HistoryPage = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const userId = 'cmn9jejm80000iw4jgjt3jklb';
-        const result = await getMealPlans(userId);
+        const result = await getMealPlans();
         const sorted = result.sort((a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );

@@ -13,8 +13,7 @@ const MealPlanDetailPage = () => {
   useEffect(() => {
     const fetchPlan = async () => {
       try {
-        const userId = 'cmn9jejm80000iw4jgjt3jklb';
-        const plans = await getMealPlans(userId);
+        const plans = await getMealPlans();
         const found = plans.find((p) => p.id === id);
         if (!found) {
           navigate('/history');
