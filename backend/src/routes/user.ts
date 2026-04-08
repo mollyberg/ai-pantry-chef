@@ -5,7 +5,7 @@ import {
 } from '../controllers/user.js';
 
 const user = new Hono();
-user.get('/:id', getUser);
+user.get('/', getUser);
 user.post('/', createUser);
 
 export default user;

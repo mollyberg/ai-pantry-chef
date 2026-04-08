@@ -5,7 +5,7 @@ import {
 } from '../controllers/ingredients.js';
 
 const ingredients = new Hono();
-ingredients.get('/:userId', getIngredients);
+ingredients.get('/', getIngredients);
 ingredients.post('/', createIngredients);
 
 export default ingredients;
