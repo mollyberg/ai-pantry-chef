@@ -1,17 +1,16 @@
 import type { Context } from 'hono';
-import { getAuth } from '@hono/clerk-auth';
 import prisma from '../lib/prisma.js';
 
 export const getUser = async (c: Context) => {
   try {
-    const { userId } = getAuth(c);
-    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
+    const dbUserId = c.get('dbUserId') as string;
+    if (!dbUserId) return c.json({ error: 'Unauthorized' }, 401);
 
-    const logs = await prisma.user.findUnique({
-      where: { id: userId }
+    const user = await prisma.user.findUnique({
+      where: { id: dbUserId },
     });
 
-    return c.json(logs);
+    return c.json(user);
   } catch (error) {
     console.error(error);
     return c.json({ error: 'Failed to fetch user' }, 500);
@@ -23,7 +22,7 @@ export const createUser = async (c: Context) => {
     const body = await c.req.json();
     const { clerkId, email, name } = body;
 
-    if (!clerkId || !email ) {
+    if (!clerkId || !email) {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 
@@ -38,7 +37,6 @@ export const createUser = async (c: Context) => {
     return c.json(log, 201);
   } catch (error) {
     console.error('Full error:', error);
-    //console.error(error);
     return c.json({ error: 'Failed to create user' }, 500);
   }
 };

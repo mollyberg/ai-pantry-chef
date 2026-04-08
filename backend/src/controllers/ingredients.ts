@@ -1,14 +1,13 @@
 import type { Context } from 'hono';
-import { getAuth } from '@hono/clerk-auth';
 import prisma from '../lib/prisma.js';
 
 export const getIngredients = async (c: Context) => {
   try {
-    const { userId } = getAuth(c);
-    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
+    const dbUserId = c.get('dbUserId') as string;
+    if (!dbUserId) return c.json({ error: 'Unauthorized' }, 401);
 
     const logs = await prisma.ingredientLog.findMany({
-      where: { userId },
+      where: { userId: dbUserId },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -21,8 +20,9 @@ export const getIngredients = async (c: Context) => {
 
 export const createIngredients = async (c: Context) => {
   try {
-    const { userId } = getAuth(c);
-    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
+    const dbUserId = c.get('dbUserId') as string;
+    if (!dbUserId) return c.json({ error: 'Unauthorized' }, 401);
+
     const body = await c.req.json();
     const { type, ingredients } = body;
 
@@ -32,7 +32,7 @@ export const createIngredients = async (c: Context) => {
 
     const log = await prisma.ingredientLog.create({
       data: {
-        userId,
+        userId: dbUserId,
         type,
         ingredients,
       },
@@ -41,7 +41,6 @@ export const createIngredients = async (c: Context) => {
     return c.json(log, 201);
   } catch (error) {
     console.error('Full error:', error);
-    //console.error(error);
     return c.json({ error: 'Failed to create ingredient log' }, 500);
   }
 };

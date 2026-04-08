@@ -1,17 +1,16 @@
 import type { Context } from 'hono';
-import { getAuth } from '@hono/clerk-auth';
 import prisma from '../lib/prisma.js';
 
 export const getMealPlan = async (c: Context) => {
   try {
-    const { userId } = getAuth(c);
+    const dbUserId = c.get('dbUserId') as string;
 
-    if (!userId) {
-      return c.json({ error: 'Missing user id' }, 400);
+    if (!dbUserId) {
+      return c.json({ error: 'Unauthorized' }, 401);
     }
 
     const logs = await prisma.mealPlan.findMany({
-      where: { userId },
+      where: { userId: dbUserId },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -24,19 +23,10 @@ export const getMealPlan = async (c: Context) => {
 
 export const createMealPlan = async (c: Context) => {
   try {
-    console.log('made it 1');
-    
-    const { userId } = getAuth(c);
-
-    if (!userId) return c.json({ error: 'Unauthorized' }, 401);
-
-    console.log('made it 2');
+    const dbUserId = c.get('dbUserId') as string;
+    if (!dbUserId) return c.json({ error: 'Unauthorized' }, 401);
 
     const body = await c.req.json();
-    console.log('made it 3');
-
-    console.log('createMealPlan body:', JSON.stringify(body, null, 2));
-    console.log('userId:', userId);
 
     const { ingredientsUsed, missingIngredients, plan } = body;
 
@@ -46,7 +36,7 @@ export const createMealPlan = async (c: Context) => {
 
     const mealPlan = await prisma.mealPlan.create({
       data: {
-        userId,
+        userId: dbUserId,
         ingredientsUsed,
         missingIngredients,
         plan,
@@ -56,7 +46,6 @@ export const createMealPlan = async (c: Context) => {
     return c.json(mealPlan, 201);
   } catch (error) {
     console.error('Full error:', error);
-    //console.error(error);
     return c.json({ error: 'Failed to create mealplan' }, 500);
   }
 };

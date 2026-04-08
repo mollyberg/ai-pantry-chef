@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
-import { clerkMiddleware } from './middleware/clerk.js';
+import { clerkMiddleware, ensureUser } from './middleware/clerk.js';
 import ingredients from './routes/ingredients.js';
 import mealplan from './routes/mealplan.js';
 import user from './routes/user.js';
@@ -21,10 +21,10 @@ app.get('/health', (c) => {
 });
 
 // protected routes — require auth
-app.use('/ingredients/*', clerkMiddleware());
-app.use('/mealplan/*', clerkMiddleware());
-app.use('/ai/*', clerkMiddleware());
-app.use('/user/*', clerkMiddleware());
+app.use('/ingredients/*', clerkMiddleware(), ensureUser);
+app.use('/mealplan/*', clerkMiddleware(), ensureUser);
+app.use('/ai/*', clerkMiddleware(), ensureUser);
+app.use('/user/*', clerkMiddleware(), ensureUser);
 
 app.route('/ingredients', ingredients);
 app.route('/mealplan', mealplan);
