@@ -5,7 +5,7 @@ import type { MiddlewareHandler } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import prisma from '../lib/prisma.js';
 
-const clerkBackend = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+const clerkBackend = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY ?? '' });
 
 export const ensureUser: MiddlewareHandler = async (c, next) => {
   const auth = getAuth(c);
