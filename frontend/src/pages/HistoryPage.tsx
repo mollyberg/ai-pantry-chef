@@ -120,7 +120,7 @@ const HistoryPage = () => {
                       <span className="font-medium text-gray-700 capitalize">{day}</span>
                       {MEALS.map((mealType) => (
                         <span key={mealType} className="text-gray-500 truncate">
-                          {plan.plan[day as keyof typeof plan.plan]?.[mealType as keyof object]?.title ?? '—'}
+                          {(plan.plan[day as keyof typeof plan.plan]?.[mealType as keyof object] as { title?: string } | undefined)?.title ?? '—'}
                         </span>
                       ))}
                     </div>
