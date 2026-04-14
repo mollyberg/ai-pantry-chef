@@ -2,7 +2,7 @@
 
 > Upload a photo of your fridge or pantry and get a personalized, AI-generated weekly meal plan — complete with recipes, ingredients, and a shopping list for what you're missing.
 
-**🚧 Active Development** — Core features complete, auth and deployment in progress.
+**🌐 Live Demo: [ai-pantry-chef-mu.vercel.app](https://ai-pantry-chef-mu.vercel.app)**
 
 ---
 
@@ -27,8 +27,8 @@ AI Pantry Chef eliminates the daily "what should I make for dinner?" problem by 
 | Backend | Node.js + TypeScript + Hono | Modern, lightweight REST API framework |
 | Database | PostgreSQL + Prisma | Type-safe ORM with relational data integrity |
 | AI | Claude API (vision + text) | Vision for photo analysis, text for meal plan generation |
-| Auth | Clerk | Production-grade auth — coming in v1.1 |
-| Deployment | Vercel + Railway | Coming in v1.1 |
+| Auth | Clerk | Production-grade auth with per-user data isolation |
+| Deployment | Vercel + Railway | Frontend on Vercel, backend + DB on Railway |
 
 ---
 
@@ -50,10 +50,11 @@ AI Pantry Chef eliminates the daily "what should I make for dinner?" problem by 
 - **AI generation and persistence are intentionally separate** — the backend generates a meal plan without saving it, allowing users to review and approve before it's stored. This enables a cleaner V2 editing flow.
 - **Structured prompt engineering** — Claude returns strict JSON schemas for both ingredient detection and meal plan generation, making frontend rendering deterministic.
 - **Layered error handling** — image type/size validation on the frontend, media type and size enforcement on the backend, and graceful fallbacks for empty or unrecognizable images.
+- **Auth bridging via middleware** — Clerk handles authentication; an `ensureUser` middleware automatically creates a database user record on first login, linking Clerk's user ID to an internal PostgreSQL record.
 
 ---
 
-## 🚀 Current Features (v1 MVP)
+## 🚀 Features
 
 - [x] Photo upload with file type and size validation
 - [x] AI-powered ingredient detection via Claude vision API
@@ -62,18 +63,13 @@ AI Pantry Chef eliminates the daily "what should I make for dinner?" problem by 
 - [x] Missing ingredient / shopping list generation
 - [x] Save meal plans to database
 - [x] View saved meal plan history
-- [ ] User authentication (Clerk) — in progress
-- [ ] Deployment (Vercel + Railway) — in progress
+- [x] User authentication via Clerk
+- [x] Per-user data isolation
+- [x] Deployed to Vercel + Railway
 
 ---
 
 ## 🗺 Roadmap
-
-### V1.1 — Auth & Deployment
-- User authentication via Clerk
-- Per-user meal plan history
-- Deployed to Vercel (frontend) + Railway (backend + DB)
-- Live demo URL
 
 ### V2 — Personalization & Editing
 - **Multiple photo uploads** — combine fridge + pantry + multiple shelves into one ingredient list
@@ -99,6 +95,7 @@ AI Pantry Chef eliminates the daily "what should I make for dinner?" problem by 
 - Node.js 18+
 - PostgreSQL
 - Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com))
+- Clerk account (get one at [clerk.com](https://clerk.com))
 
 ### Setup
 
@@ -120,11 +117,14 @@ Create `backend/.env`:
 ```
 DATABASE_URL="postgresql://YOUR_USERNAME@localhost:5432/ai_pantry_chef?schema=public"
 ANTHROPIC_API_KEY="your-anthropic-api-key"
+CLERK_SECRET_KEY="your-clerk-secret-key"
+CLERK_PUBLISHABLE_KEY="your-clerk-publishable-key"
 ```
 
 Create `frontend/.env`:
 ```
 VITE_API_URL=http://localhost:3001
+VITE_CLERK_PUBLISHABLE_KEY="your-clerk-publishable-key"
 ```
 
 ### Database Setup
@@ -166,7 +166,7 @@ ai-pantry-chef/
 │   │   ├── controllers/  # Business logic
 │   │   ├── routes/       # API route definitions
 │   │   ├── lib/          # Shared instances (Prisma, Anthropic)
-│   │   └── middleware/   # Error handling
+│   │   └── middleware/   # Clerk auth + ensureUser
 │   ├── prisma/
 │   │   └── schema.prisma # Database schema
 │   └── ...
