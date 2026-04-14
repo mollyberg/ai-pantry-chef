@@ -96,8 +96,11 @@ Rules:
     if (error instanceof Error && error.message.includes('timeout')) {
       return c.json({ error: 'Request timed out, please try again' }, 504);
     }
+    if (error instanceof Error && error.message.includes('overloaded')) {
+      return c.json({ error: "Anthropic's servers are currently overloaded. Please try again in a moment." }, 503);
+    }
     console.error('Full error:', error);
-    return c.json({ error: 'Failed to generate mealplan' }, 500);
+    return c.json({ error: 'Failed to detect ingredients' }, 500);
   }
 };
 
@@ -155,7 +158,10 @@ If existing ingredient list is limited, try to pick missing ingredients that can
     if (error instanceof Error && error.message.includes('timeout')) {
       return c.json({ error: 'Request timed out, please try again' }, 504);
     }
+    if (error instanceof Error && error.message.includes('overloaded')) {
+      return c.json({ error: "Anthropic's servers are currently overloaded. Please try again in a moment." }, 503);
+    }
     console.error('Full error:', error);
-    return c.json({ error: 'Failed to generate mealplan' }, 500);
+    return c.json({ error: 'Failed to generate meal plan' }, 500);
   }
 };
