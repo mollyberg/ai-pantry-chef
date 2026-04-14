@@ -4,6 +4,9 @@
 
 **🌐 Live Demo: [ai-pantry-chef-mu.vercel.app](https://ai-pantry-chef-mu.vercel.app)**
 
+<!-- demo GIF -->
+
+
 ---
 
 ## ✨ What It Does
@@ -34,17 +37,22 @@ AI Pantry Chef eliminates the daily "what should I make for dinner?" problem by 
 
 ## 🏗 Architecture
 
+```mermaid
+graph TD
+    A[React Frontend<br/>Vite + TypeScript] -->|REST API via axios| B[Hono Backend<br/>Node.js + TypeScript]
+    A -->|Auth tokens| C[Clerk<br/>Authentication]
+    C -->|Verify JWT| B
+    B -->|ensureUser middleware| D[(PostgreSQL<br/>via Prisma)]
+    B -->|Ingredient detection| E[Claude API<br/>Vision]
+    B -->|Meal plan generation| F[Claude API<br/>Text]
+    B -->|Read/write| D
 ```
-[React Frontend]
-      │
-      │  REST API (axios)
-      ▼
-[Hono Backend]
-      │              │
-      ▼              ▼
-[PostgreSQL]    [Claude API]
-  via Prisma    vision + text
-```
+
+**Key design decisions:**
+- **AI generation and persistence are intentionally separate** — the backend generates a meal plan without saving it, allowing users to review and approve before it's stored. This enables a cleaner V2 editing flow.
+- **Structured prompt engineering** — Claude returns strict JSON schemas for both ingredient detection and meal plan generation, making frontend rendering deterministic.
+- **Layered error handling** — image type/size validation on the frontend, media type and size enforcement on the backend, and graceful fallbacks for empty or unrecognizable images.
+- **Auth bridging via middleware** — Clerk handles authentication; an `ensureUser` middleware automatically creates a database user record on first login, linking Clerk's user ID to an internal PostgreSQL record.
 
 **Key design decisions:**
 - **AI generation and persistence are intentionally separate** — the backend generates a meal plan without saving it, allowing users to review and approve before it's stored. This enables a cleaner V2 editing flow.

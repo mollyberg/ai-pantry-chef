@@ -9,6 +9,7 @@ import UploadPage from './pages/UploadPage';
 import MealPlanPage from './pages/MealPlanPage';
 import HistoryPage from './pages/HistoryPage';
 import MealPlanDetailPage from './pages/MealPlanDetailPage';
+import TermsPage from './pages/TermsPage';
 
 const App = () => {
   const { getToken } = useAuth();
@@ -85,8 +86,15 @@ const App = () => {
               </>
             }
           />
+          <Route path="/terms" element={<TermsPage />} />
         </Routes>
       </main>
+      <footer className="border-t mt-12 py-6 text-center text-sm text-gray-400">
+        <p>
+          AI Pantry Chef is a portfolio project.{' '}
+          <a href="/terms" className="underline hover:text-gray-600">Terms & Privacy</a>
+        </p>
+      </footer>
     </BrowserRouter>
   );
 };
